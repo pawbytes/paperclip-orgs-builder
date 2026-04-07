@@ -1,0 +1,27 @@
+{
+  "scanner": "execution-efficiency-prepass",
+  "script": "prepass-execution-deps.py",
+  "version": "1.0.0",
+  "skill_path": "E:\\pawbytes\\agents\\paperclip-orgs-builder\\skills\\paperclip-org-builder",
+  "timestamp": "2026-04-05T11:41:55.140056+00:00",
+  "status": "pass",
+  "dependency_graph": {
+    "stages": [],
+    "hard_dependencies": {},
+    "soft_dependencies": {},
+    "cycles": [],
+    "transitive_redundancies": [],
+    "parallel_groups": []
+  },
+  "sequential_patterns": [],
+  "issues": [],
+  "summary": {
+    "total_issues": 0,
+    "by_severity": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    }
+  }
+}

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BMad Method · Quality Analysis: paperclip-org-builder</title>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --surface2: #21262d; --border: #30363d;
+  --text: #e6edf3; --text-muted: #8b949e; --text-dim: #6e7681;
+  --critical: #f85149; --high: #f0883e; --medium: #d29922; --low: #58a6ff;
+  --strength: #3fb950; --suggestion: #a371f7;
+  --accent: #58a6ff; --accent-hover: #79c0ff;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #ffffff; --surface: #f6f8fa; --surface2: #eaeef2; --border: #d0d7de;
+    --text: #1f2328; --text-muted: #656d76; --text-dim: #8c959f;
+    --critical: #cf222e; --high: #bc4c00; --medium: #9a6700; --low: #0969da;
+    --strength: #1a7f37; --suggestion: #8250df;
+    --accent: #0969da; --accent-hover: #0550ae;
+  }
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.5; padding: 2rem; max-width: 900px; margin: 0 auto; }
+h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+.subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+.subtitle a { color: var(--accent); text-decoration: none; }
+.subtitle a:hover { text-decoration: underline; }
+.grade { font-size: 2.5rem; font-weight: 700; margin: 0.5rem 0; }
+.grade-Excellent { color: var(--strength); }
+.grade-Good { color: var(--low); }
+.grade-Fair { color: var(--medium); }
+.grade-Poor { color: var(--critical); }
+.narrative { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6; }
+.badge { display: inline-flex; align-items: center; padding: 0.15rem 0.5rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 600; }
+.badge-critical { background: color-mix(in srgb, var(--critical) 20%, transparent); color: var(--critical); }
+.badge-high { background: color-mix(in srgb, var(--high) 20%, transparent); color: var(--high); }
+.badge-medium { background: color-mix(in srgb, var(--medium) 20%, transparent); color: var(--medium); }
+.badge-low { background: color-mix(in srgb, var(--low) 20%, transparent); color: var(--low); }
+.badge-strength { background: color-mix(in srgb, var(--strength) 20%, transparent); color: var(--strength); }
+.section { border: 1px solid var(--border); border-radius: 0.5rem; margin: 0.75rem 0; overflow: hidden; }
+.section-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: var(--surface); cursor: pointer; user-select: none; }
+.section-header:hover { background: var(--surface2); }
+.section-header .arrow { font-size: 0.7rem; transition: transform 0.15s; color: var(--text-muted); width: 1rem; }
+.section-header.open .arrow { transform: rotate(90deg); }
+.section-header .label { font-weight: 600; flex: 1; }
+.section-header .count { font-size: 0.8rem; color: var(--text-muted); }
+.section-header .actions { display: flex; gap: 0.5rem; }
+.section-body { display: none; }
+.section-body.open { display: block; }
+.item { padding: 0.75rem 1rem; border-top: 1px solid var(--border); }
+.item:hover { background: var(--surface); }
+.item-title { font-weight: 600; font-size: 0.9rem; }
+.item-file { font-family: var(--mono); font-size: 0.75rem; color: var(--text-muted); }
+.item-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+.item-action { font-size: 0.85rem; margin-top: 0.25rem; }
+.item-action strong { color: var(--strength); }
+.opp { padding: 1rem; border-top: 1px solid var(--border); }
+.opp-header { display: flex; align-items: center; gap: 0.75rem; }
+.opp-name { font-weight: 600; font-size: 1rem; flex: 1; }
+.opp-count { font-size: 0.8rem; color: var(--text-muted); }
+.opp-desc { font-size: 0.9rem; color: var(--text-muted); margin: 0.5rem 0; }
+.opp-impact { font-size: 0.85rem; color: var(--text-dim); font-style: italic; }
+.opp-findings { margin-top: 0.75rem; padding-left: 1rem; border-left: 2px solid var(--border); display: none; }
+.opp-findings.open { display: block; }
+.opp-finding { font-size: 0.85rem; padding: 0.25rem 0; color: var(--text-muted); }
+.opp-finding .source { font-size: 0.75rem; color: var(--text-dim); }
+.btn { background: none; border: 1px solid var(--border); border-radius: 0.25rem; padding: 0.3rem 0.7rem; cursor: pointer; color: var(--text-muted); font-size: 0.8rem; transition: all 0.15s; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn.copied { border-color: var(--strength); color: var(--strength); }
+.strength-item { padding: 0.5rem 1rem; border-top: 1px solid var(--border); }
+.strength-item .title { font-weight: 600; font-size: 0.9rem; color: var(--strength); }
+.strength-item .detail { font-size: 0.85rem; color: var(--text-muted); }
+.analysis-section { padding: 0.75rem 1rem; border-top: 1px solid var(--border); }
+.analysis-section h4 { font-size: 0.9rem; margin-bottom: 0.25rem; }
+.analysis-section p { font-size: 0.85rem; color: var(--text-muted); }
+.analysis-finding { font-size: 0.85rem; padding: 0.25rem 0 0.25rem 1rem; border-left: 2px solid var(--border); margin: 0.25rem 0; color: var(--text-muted); }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
+.modal-overlay.visible { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1.5rem; width: 90%; max-width: 700px; max-height: 80vh; overflow-y: auto; }
+.modal h3 { margin-bottom: 0.75rem; }
+.modal pre { background: var(--bg); border: 1px solid var(--border); border-radius: 0.375rem; padding: 1rem; font-family: var(--mono); font-size: 0.8rem; white-space: pre-wrap; word-wrap: break-word; max-height: 50vh; overflow-y: auto; }
+.modal-actions { display: flex; gap: 0.75rem; margin-top: 1rem; justify-content: flex-end; }
+.recs { padding: 0.75rem 1rem; border-top: 1px solid var(--border); }
+.rec { padding: 0.3rem 0; font-size: 0.9rem; }
+.rec-rank { font-weight: 700; color: var(--accent); margin-right: 0.5rem; }
+.rec-resolves { font-size: 0.8rem; color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div style="color:#a371f7;font-size:0.8rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.25rem">BMad Method</div>
+<h1>Quality Analysis: <span id="skill-name"></span></h1>
+<div class="subtitle" id="subtitle"></div>
+
+<div id="grade-area"></div>
+<div class="narrative" id="narrative"></div>
+
+<div id="broken-section"></div>
+<div id="opportunities-section"></div>
+<div id="strengths-section"></div>
+<div id="recommendations-section"></div>
+<div id="detailed-section"></div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3 id="modal-title">Generated Prompt</h3>
+    <pre id="modal-content"></pre>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Close</button>
+      <button class="btn btn-primary" onclick="copyModal()">Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<script id="report-data" type="application/json">{"meta": {"skill_name": "paperclip-org-builder", "skill_path": "E:\\pawbytes\\agents\\paperclip-orgs-builder\\skills\\paperclip-org-builder", "timestamp": "2026-04-05T18:41:36Z", "scanner_count": 8}, "narrative": "A well-architected 9-stage HITL workflow with excellent progressive disclosure, consistent stage templates, and correct intelligence placement. The primary opportunity is closing the gap between what stages produce and what the assembly script outputs — users invest effort in stages 5–8 that doesn't fully materialize in the final package. Secondary concerns are Stage 4 scaling for larger orgs and under-specified compaction recovery.", "grade": "Good", "broken": [], "opportunities": [{"name": "Deferred Validation — Errors Only Caught at Stage 9", "description": "All automated validation is concentrated in the final stage. Eight stages of data accumulation rely solely on the LLM for integrity checks. Errors discovered during assembly require expensive backtracking through potentially hours of prior work.", "severity": "medium", "impact": "Catches structural errors at the stage they're introduced instead of at assembly time. Eliminates costly multi-stage backtracking and reduces LLM tax on deterministic checks by ~4,200–12,100 tokens per run.", "action": "Create a unified validate-draft.py script that validates the draft JSON at any stage transition, with progressive checks (org tree integrity at stage ≥3, budget arithmetic at stage ≥7, cron syntax at stage ≥8). Call it after each stage gate approval.", "finding_count": 7, "findings": [{"title": "All validation concentrated at Stage 9", "file": "SKILL.md", "line": 55, "detail": "No automated integrity checks run during stages 1–8. The LLM is the sole validator for 8 stages of data accumulation.", "source": "script-opportunities"}, {"title": "No draft JSON schema validation at stage transitions", "file": "SKILL.md", "line": 47, "detail": "Draft JSON well-formedness, required fields, and currentStage consistency are pure structure checks that should be scripted, not left to the LLM.", "source": "script-opportunities"}, {"title": "Org chart tree integrity could validate 6 stages earlier", "file": "references/03-org-chart.md", "line": 1, "detail": "CEO uniqueness, orphan detection, cycle detection, and role enum validation are all available at Stage 3 but currently only checked at Stage 9.", "source": "script-opportunities"}, {"title": "No centralized draft schema contract", "file": "references/paperclip-domain.md", "line": 1, "detail": "Each stage independently defines what it writes to the draft. Over time, stages could drift (e.g., renaming a field) without assembly logic updating.", "source": "skill-cohesion"}, {"title": "validate-package.py missing cross-ref checks for goals/projects/routines", "file": "scripts/validate-package.py", "line": 1, "detail": "Goal ownerAgentId, project leadAgentId, and routine assigneeAgentId are not validated against the agent roster.", "source": "skill-cohesion"}, {"title": "validate-package.py has no cycle detection", "file": "scripts/validate-package.py", "line": 1, "detail": "Validates that reportsTo references exist but doesn't check for circular references (A → B → A) in the hierarchy.", "source": "enhancement-opportunities"}, {"title": "Hardcoded role enum in validator", "file": "scripts/validate-package.py", "line": 1, "detail": "Role enum (ceo, manager, engineer, designer, marketer, general) is hardcoded. Adding roles requires code changes. Should read from domain config.", "source": "enhancement-opportunities"}]}, {"name": "Assembly Output Gap — Package Doesn't Reflect All Stage Work", "description": "The assembly script creates projects/, skills/, and tasks/ directories but never populates them. Users invest effort designing goals, discovering skills, and configuring budgets/routines in stages 5–8, but this data only partially materializes in the final package. A permissions field is referenced in Stage 4 with no backing schema or output.", "severity": "high", "impact": "Closing this gap ensures the final package reflects the full scope of user decisions, eliminating confusion about empty directories and preventing data from being silently dropped.", "action": "Either update assemble-package.py to emit project files, skill references, and routine configurations, or explicitly document in stage instructions that these entities are runtime-seeded (not file-packaged) and remove the empty directories.", "finding_count": 6, "findings": [{"title": "skills/ directory created but never populated", "file": "references/09-assembly-review.md", "line": 1, "detail": "Stage 9 lists skills/ in package output, but assembly script creates an empty directory. Skills are embedded in AGENTS.md frontmatter, making the directory misleading.", "source": "workflow-integrity"}, {"title": "projects/ directory created but never populated", "file": "scripts/assemble-package.py", "line": 1, "detail": "Stage 6 designs projects with lead agents and goal alignment, but assembly only writes company and agent files.", "source": "skill-cohesion"}, {"title": "tasks/ directory created but never populated", "file": "scripts/assemble-package.py", "line": 1, "detail": "The domain schema supports issues/tasks with identifiers, but assembly creates an empty tasks/ directory.", "source": "skill-cohesion"}, {"title": "Draft routines and budgets not written to package files", "file": "scripts/assemble-package.py", "line": 1, "detail": "Draft contains routines and budgets from stages 7-8, but assembly doesn't write them to any file. User work is silently dropped.", "source": "enhancement-opportunities"}, {"title": "Permissions ghost field", "file": "references/04-agent-deep-dive.md", "line": 26, "detail": "Stage 4 references 'Permissions — what resources and tools this agent can access' in its proposal template, but no domain schema, assembly output, or validation exists for permissions.", "source": "skill-cohesion"}, {"title": "orgChart field in draft not in domain schema", "file": "references/03-org-chart.md", "line": 1, "detail": "Stage 3 Draft Update adds orgChart text field for ASCII visualization, but paperclip-domain.md does not define this field on the Company entity. Benign but inconsistent.", "source": "workflow-integrity"}]}, {"name": "Compaction Recovery and Session Continuity Under-Specified", "description": "The draft JSON stores currentStage but not intra-stage progress. Recovery has no UX choreography, no tiered summary depth, and no 'save and quit' messaging. Two design principles from SKILL.md are never reinforced in stage files, making them vulnerable to context loss. There is no mechanism for revisiting earlier decisions.", "severity": "high", "impact": "Improving recovery and continuity reduces abandonment risk in a 30–60+ minute workflow, ensures design principles survive compaction, and gives users confidence their work persists across sessions.", "action": "Add stageProgress to draft JSON for intra-stage state. Write recovery preamble patterns in the Compaction Recovery section. Add 'Your progress is saved' messaging at every stage gate. Add one-line principle reminders to each stage's Progression section.", "finding_count": 6, "findings": [{"title": "No intra-stage progress tracking in draft JSON", "file": "SKILL.md", "line": 47, "detail": "If compaction occurs mid-Stage 4 (after configuring 3 of 7 agents), the agent only knows 'Stage 4' — not which agents were completed. Lost progress must be re-done.", "source": "enhancement-opportunities"}, {"title": "No recovery UX choreography or preamble templates", "file": "SKILL.md", "line": 47, "detail": "Recovery instructions say 'read draft, resume' but don't specify what the agent says, how much to summarize, or whether to offer adjustment before resuming forward.", "source": "enhancement-opportunities"}, {"title": "No save-and-quit messaging at stage gates", "file": "SKILL.md", "line": 14, "detail": "Users are never told their progress persists. For a 9-stage workflow, users who need to leave feel they're abandoning work.", "source": "enhancement-opportunities"}, {"title": "Capture-don't-interrupt principle not reinforced in stage files", "file": "SKILL.md", "line": 24, "detail": "The principle is declared in SKILL.md Design Principles but never mentioned in any of the 9 stage reference files. It relies entirely on SKILL.md surviving compaction.", "source": "skill-cohesion"}, {"title": "Soft-gate phrasing not echoed in stage progressions", "file": "SKILL.md", "line": 24, "detail": "The 'Anything to adjust, or shall we move on?' pattern is in SKILL.md but no stage file includes it. Stages just say 'User approves → next.'", "source": "skill-cohesion"}, {"title": "No backward navigation mechanism", "file": "SKILL.md", "line": 31, "detail": "No mechanism for 'actually, I want to redo the org chart.' Budget implications in Stage 7 frequently prompt users to rethink agent count from Stage 3.", "source": "enhancement-opportunities"}]}, {"name": "Stage 4 Agent Configuration Doesn't Scale", "description": "Stage 4 processes agents one-by-one with individual HITL approval. For a 10-agent org, this creates 10 sequential review cycles with no batch option, no progress indicator, and no template reuse. This is the primary abandonment point — users rubber-stamp by agent 5.", "severity": "high", "impact": "Adding batch approval and progress awareness cuts Stage 4 duration by 50%+ for medium orgs and prevents the review fatigue that drives first-timer abandonment.", "action": "Add batch-approval mode: present CEO solo, managers as a group, same-role workers as a batch with per-agent override. Show progress indicators. Offer 'apply this template to all [engineers]' after the first of a role type.", "finding_count": 5, "findings": [{"title": "Per-agent sequential review doesn't scale", "file": "references/04-agent-deep-dive.md", "line": 1, "detail": "For a 10-agent org, Stage 4 involves 10 review-approve cycles. The skill provides no batch processing, role templates, or scale-adapted approach.", "source": "skill-cohesion"}, {"title": "No batch-approval option for similar-role agents", "file": "references/04-agent-deep-dive.md", "line": 1, "detail": "Four engineers with similar configs each get individual review. No 'approve all engineers' or 'apply template' mechanism exists.", "source": "enhancement-opportunities"}, {"title": "No progress indicator during per-agent walkthrough", "file": "references/04-agent-deep-dive.md", "line": 1, "detail": "Users have no sense of how many agents remain. No 'Agent 3 of 10' or percentage completion shown.", "source": "enhancement-opportunities"}, {"title": "Progression gate implicit for multi-agent iteration", "file": "references/04-agent-deep-dive.md", "line": 1, "detail": "Progression says 'All agents approved →' without specifying how the agent tracks which individual agents have been approved.", "source": "workflow-integrity"}, {"title": "First-timer drop-off risk by agent 5+", "file": "references/04-agent-deep-dive.md", "line": 1, "detail": "First-time users don't understand technical config details. By agent 5 of 8, they're rubber-stamping without reviewing. Tiered attention (CEO detailed, workers batched) would help.", "source": "enhancement-opportunities"}]}, {"name": "Minor Cross-Stage Prompt Duplication", "description": "~210 tokens of prunable content scattered across stages 5, 7, 8, and 9 — inferable guidance that the LLM would follow naturally, cross-stage duplication of model-tier advice, and validation checks that duplicate script logic. Individually negligible (2.4% of total content), but collectively a clean optimization.", "severity": "low", "impact": "Trimming ~210 tokens tightens the prompt surface and removes minor confusion about which stage owns model-selection guidance. Adding a config header improves scanner and tooling compatibility.", "action": "Collapse Stage 5 search strategy to one line, trim Stage 7 cost optimization to reference Stage 4's model-tier guidance, replace Stage 9 validation check list with 'run script and report results.' Add type/interaction-model/stage-count to SKILL.md frontmatter config header.", "finding_count": 5, "findings": [{"title": "Stage 5 Search Strategy subsection is inferable", "file": "references/05-skills-discovery.md", "line": 20, "detail": "Four bullets on search strategy ('Search by domain first, then capabilities') that the LLM would follow naturally. ~40 tokens prunable.", "source": "prompt-craft"}, {"title": "Stage 7 Cost Optimization duplicates Stage 4 model-tier guidance", "file": "references/07-budget-optimization.md", "line": 24, "detail": "Model selection and delegation depth guidance appears in both Stage 4 (runtime config) and Stage 7 (budget optimization). ~60 tokens of cross-stage duplication.", "source": "prompt-craft"}, {"title": "Stage 9 validation checks duplicate script logic", "file": "references/09-assembly-review.md", "line": 33, "detail": "Validation key checks listed in the prompt partially duplicate what validate-package.py already checks. ~30 tokens. The script output should be the source of truth.", "source": "prompt-craft"}, {"title": "Stage 8 role-pattern examples are inferable but improve proposals", "file": "references/08-routines-scheduling.md", "line": 13, "detail": "Example routines per role (CEO=weekly review, Managers=daily standup) accelerate first proposals but are technically inferable. ~50 tokens. Borderline — keep for proposal quality.", "source": "prompt-craft"}, {"title": "No structured config header in SKILL.md frontmatter", "file": "SKILL.md", "line": 1, "detail": "Frontmatter has name and description but lacks type, interaction-model, stage-count. Reduces scanner and tooling interop.", "source": "prompt-craft"}]}], "strengths": [{"title": "Excellent progressive disclosure architecture", "detail": "SKILL.md is an 851-token routing hub; all stage logic lives in references/. The LLM never holds all 9 stages simultaneously. Per-turn token ceiling is ~1,850 worst case."}, {"title": "Consistent, self-contained stage templates", "detail": "Every stage follows Goal → How to Propose → Draft Update → Progression. Each stage is fully self-contained — no stage needs to read another to function."}, {"title": "Correct intelligence placement", "detail": "Deterministic work (assembly, validation) delegated to scripts. Creative/adaptive work (org design, instruction writing, budget strategy) stays in prompts. Fallback pattern included for environments without Python."}, {"title": "Strong HITL design philosophy", "detail": "'Suggest, don't interrogate' is implemented throughout. Every stage proposes complete solutions, not questionnaires. Design Principles section is compact, with all four principles load-bearing."}, {"title": "Complete cross-reference integrity", "detail": "All 9 stage file paths resolve correctly. Progression chains are consistent. Inter-stage references (scripts, domain ref) all verified. Zero orphaned files."}, {"title": "Clean path standards", "detail": "Zero findings from path-standards scanner. No double prefixes, no bare internal paths, no absolute paths, no relative-prefix issues."}, {"title": "Sound dependency chain with no artificial bottlenecks", "detail": "Stage ordering forms a proper DAG. Sequential progression is justified by both data dependencies and HITL decision coherence. No stage could be moved earlier without losing input data."}, {"title": "Well-structured scripts with test coverage", "detail": "Both Python scripts (assemble-package.py, validate-package.py) have proper exit codes, uv run shebang, dependency declarations, and companion test files."}, {"title": "Compact, load-bearing domain reference", "detail": "paperclip-domain.md (204 lines) is entirely load-bearing — exact field names, types, enum values, package format specs. Zero narrative filler."}], "detailed_analysis": {"structure": {"assessment": "Structurally complete. SKILL.md frontmatter valid, all 7 required sections present, all 9 stage files exist in references/ with correct paths. The 10 prepass findings (9 critical missing-stage + 1 medium naming) are all false positives — prepass searched skill root instead of references/. No template artifacts, no TODOs, no orphaned files. Config integration is proper with sensible defaults and draft persistence.", "findings": [{"title": "Prepass false positives: 9 missing-stage + 1 naming convention", "file": "SKILL.md", "line": 1, "detail": "All 10 workflow-integrity prepass findings are false positives. Scanner searched skill root for stage files instead of references/ subdirectory. Naming convention flag is also incorrect — bmad-* prefix not required for standalone skills.", "source": "workflow-integrity-prepass"}]}, "craft": {"assessment": "SKILL.md scores 9/10 for progressive disclosure. Token efficiency is strong at ~210 prunable tokens out of ~8,700 total (2.4%). Outcome-driven balance is correct — outcomes for creative work, implementation rails for format-sensitive work. The main craft gap is absent config header for tooling interop and implicit domain reference loading strategy.", "overview_quality": "appropriate", "progressive_disclosure": "good", "findings": [{"title": "Domain reference loading strategy is implicit", "file": "SKILL.md", "line": 51, "detail": "The domain reference is listed but there's no explicit instruction on when to load it. An eager agent might load the ~800-token file every stage. Should specify lazy-loading for stages 3 and 9.", "source": "prompt-craft"}]}, "cohesion": {"assessment": "Stage flow coherence is strong — clean DAG with logical abstract-to-concrete progression. Nine stages match the Paperclip domain surface area. Purpose alignment has a gap: assembly output doesn't reflect all stage work. Design principles are honored in spirit but two (capture-don't-interrupt, soft gates) are not reinforced in stage files. Redundancy between stages is complementary, not duplicative.", "dimensions": {"stage_flow": {"score": "strong", "notes": "Clean DAG, no circular deps, every stage narrows the design space. Vision → Identity → Structure → Config → Skills → Goals → Budget → Scheduling → Assembly."}, "purpose_alignment": {"score": "moderate", "notes": "Principles honored in implementation but assembly output gap means stages 5-8 work doesn't fully materialize. Permissions ghost field in Stage 4."}, "complexity_appropriateness": {"score": "strong", "notes": "9 stages defensible for the domain. Fewer would require more context-switching; more would add ceremony. No viable merge candidates."}}, "findings": [{"title": "Stage 4→5 feedback loop risk", "file": "references/05-skills-discovery.md", "line": 1, "detail": "Discovering a skill in Stage 5 might reveal a capability the agent should have had defined in Stage 4. No explicit instruction to reconcile capabilities after skill discovery.", "source": "skill-cohesion"}, {"title": "No inter-agent communication design stage", "file": "SKILL.md", "line": 31, "detail": "Stage 3 designs reporting lines but there's no structured design for how agents communicate — message formats, escalation protocols, handoff conventions.", "source": "skill-cohesion"}]}, "efficiency": {"assessment": "Rated 92/100. Sequential inter-stage ordering is correct for HITL. Minor intra-stage parallelization opportunities exist: Stage 5 skill searches across agents (~5-15s), Stage 9 review reads, and activation config loads. No subagent delegation needed. Draft JSON pattern is efficient — compact JSON, incremental reads, compaction-safe. Scripts are appropriately fast for expected workload (5-7 agents).", "findings": [{"title": "Stage 5 skill searches can be parallelized across agents", "file": "references/05-skills-discovery.md", "line": 1, "detail": "Skill discovery queries are fully independent. Parallel npx skills find calls for all agents would save ~5-15 seconds of serial CLI execution.", "source": "execution-efficiency"}, {"title": "Stage 9 review reads can be batched", "file": "references/09-assembly-review.md", "line": 1, "detail": "After validation, directory tree listing, COMPANY.md content, and sample AGENTS.md content are independent reads that can be performed in parallel.", "source": "execution-efficiency"}, {"title": "Domain reference lazy-loading should be explicit", "file": "SKILL.md", "line": 51, "detail": "Domain reference (~800 tokens) is only needed at stages 3 and 9, but current wording is ambiguous. An eager agent might load it every stage, wasting ~1,200 tokens per unnecessary load.", "source": "execution-efficiency"}]}, "experience": {"assessment": "Strong for first-timers through stages 1-3 via propose-and-refine. Friction emerges at Stage 4 (technical complexity without context) and Stage 7 (no cost anchoring). Expert users frustrated by mandatory linear walk. Edge cases (solo agent, mega org) have no detection or adaptation. Hostile environments (no uv/npx) fail silently at stages 5 and 9.", "journeys": [{"archetype": "first-timer", "summary": "Excellent experience through stages 1-3 via propose-and-refine pattern. Friction at Stage 4 (technical config like temperature/model without contextualized explanations) and Stage 7 (no cost anchoring — 'Is $50/month a lot?'). Drop-off risk at Stage 4 marathon.", "friction_points": ["Stage 4 technical config lacks contextualized explanations for first-timers", "Stage 7 budget has no pricing benchmarks or analogies", "Stage 4 per-agent review causes rubber-stamping by agent 5+"], "bright_spots": ["Stages 1-3 propose-and-refine pattern shines", "User feels guided, not interrogated"]}, {"archetype": "expert", "summary": "Frustrating experience. Users who arrive with complete org specs must walk through 9 stages even though they've already done the thinking. No fast-track or pre-populate mechanism.", "friction_points": ["No quick-start detection for structured input", "Must explain things they already know", "Drop-off risk at Stage 1 — feels like unnecessary ceremony"], "bright_spots": ["Quality of proposals when they do engage is high", "Compaction recovery means they can resume if interrupted"]}, {"archetype": "confused", "summary": "Stage 1 handles well — proposes a vision from whatever they share. But subsequent stages assume increasing clarity. By Stage 5, they don't know what skills agents need because they don't understand what agents do.", "friction_points": ["Increasing complexity without matching scaffolding", "Stage 5 skills discovery assumes user knows agent capabilities"], "bright_spots": ["Suggestive HITL approach carries confused users further than interrogative would", "Full proposals with defaults reduce decision burden"]}, {"archetype": "edge-case", "summary": "Solo-agent orgs get an awkward hierarchy stage. Mega-orgs (20+ agents) break Stage 4 into a 2-hour marathon. No-CEO requests hit a validation wall with no explanation.", "friction_points": ["Solo agent: org chart stage feels pointless", "Mega org: Stage 4 becomes 2-hour marathon with no batch processing", "No-CEO request: fails validation without explaining why CEO is required"], "bright_spots": ["general role catch-all handles unusual role types"]}, {"archetype": "hostile-environment", "summary": "No upfront environment verification. Users discover missing tools (uv, npx) at Stage 5 or Stage 9 — deep into the workflow. Fallback paths exist but feel like afterthoughts.", "friction_points": ["No uv check until Stage 9 assembly attempt", "No npx check until Stage 5 skills discovery", "Manual assembly fallback is a large ask of the LLM", "No network access makes skills discovery a dead end"], "bright_spots": ["Script fallback instructions exist in SKILL.md", "Skills stage has manual URL fallback path"]}, {"archetype": "automator", "summary": "No API, no headless mode, no batch capability. Must interact manually for every org. Hybrid review-only mode and full headless mode assessed as achievable.", "friction_points": ["No headless/batch mode for scripted org creation", "No template system for reusing approved designs", "Must walk through all 9 interactive stages every time"], "bright_spots": ["Draft JSON as state file is already machine-parseable", "Scripts are standalone and could be called directly with pre-built JSON"]}], "autonomous": {"potential": "partially-adaptable", "notes": "Fundamentally interactive by design (HITL at every gate). A hybrid review-only mode (pre-populate all stages, single combined review) is low-effort and high-value. Full headless mode is viable for power users with complete specs — needs input schema, validation, and default-filling. Draft JSON state file and standalone scripts provide a foundation."}, "findings": [{"title": "No environment detection on activation", "file": "SKILL.md", "line": 14, "detail": "Four external dependencies (uv, npx, skills CLI, Paperclip CLI) are assumed available with no upfront check. Failures surface deep in the workflow.", "source": "enhancement-opportunities"}, {"title": "skills.sh external dependency risk", "file": "references/05-skills-discovery.md", "line": 1, "detail": "Stage 5 hardcodes reliance on a third-party skill registry. If skills.sh changes its API or goes down, the stage partially fails. Fallback path reads as an afterthought.", "source": "skill-cohesion"}, {"title": "Budget stage lacks cost anchoring", "file": "references/07-budget-optimization.md", "line": 1, "detail": "Stage 7 asks agent to suggest a budget but provides no model pricing data, no historical benchmarks, no example budget profiles. The agent is guessing.", "source": "enhancement-opportunities"}]}, "scripts": {"assessment": "Two existing scripts are well-implemented with zero lint findings and companion tests. Two new scripts recommended: validate-draft.py (consolidates draft validation across all stages) and summarize-draft.py (compact summaries for recovery and context reduction). The highest-value opportunity is mid-workflow draft validation — catches errors 1–8 stages earlier than current flow.", "token_savings": "~4,200–12,100 tokens per full run (deterministic validation) + ~500–2,000 tokens per compaction event (summary generation)", "findings": [{"title": "validate-draft.py — unified mid-workflow validator", "file": "scripts/validate-package.py", "line": 1, "detail": "Consolidates 6 sub-findings: JSON schema, org tree integrity, issue prefix format, cron syntax, budget arithmetic, cross-reference validation. Progressive checks by stage threshold.", "source": "script-opportunities"}, {"title": "summarize-draft.py — compact stage-aware summaries", "file": "SKILL.md", "line": 47, "detail": "Produces ~150-token compact summary instead of LLM parsing raw JSON (~500-2,000+ tokens). Two modes: stage-entry context extraction and compaction recovery summary.", "source": "script-opportunities"}, {"title": "assemble-package.py lacks idempotency", "file": "scripts/assemble-package.py", "line": 1, "detail": "Running twice overwrites without warning. No --force flag or backup mechanism. Also no partial assembly — one bad agent fails the whole run.", "source": "enhancement-opportunities"}, {"title": "slugify() drops unicode characters", "file": "scripts/assemble-package.py", "line": 1, "detail": "'ÜberTech' becomes 'bertech'. Should use a unicode-aware slugifier to handle international company/agent names.", "source": "enhancement-opportunities"}]}}, "recommendations": [{"rank": 1, "action": "Create validate-draft.py mid-workflow validator with progressive stage-threshold checks (org tree at ≥3, budget arithmetic at ≥7, cron syntax at ≥8). Call after each stage gate approval.", "resolves": 7, "effort": "medium"}, {"rank": 2, "action": "Fix assembly output gap — either populate package directories with project/skill/routine files from draft data, or remove empty directories and clarify the runtime-seeding model in stage instructions.", "resolves": 6, "effort": "medium"}, {"rank": 3, "action": "Improve compaction recovery — add stageProgress to draft JSON, write recovery preamble templates, add save-and-quit messaging at every gate, reinforce design principles with one-line reminders in stage Progression sections.", "resolves": 6, "effort": "medium"}, {"rank": 4, "action": "Add batch-approval mode to Stage 4 — group agents by role tier (CEO solo, managers grouped, same-role workers batched), show progress indicators, offer template application after first of a role type.", "resolves": 5, "effort": "medium"}, {"rank": 5, "action": "Trim ~210 tokens of cross-stage prompt duplication — collapse Stage 5 search strategy, deduplicate model-tier advice between stages 4 and 7, replace Stage 9 validation list with script deferral, add config header to frontmatter.", "resolves": 5, "effort": "low"}, {"rank": 6, "action": "Add environment detection on activation — silently check for uv and npx, adapt flow to skip skills search or plan for manual assembly if tools are missing.", "resolves": 3, "effort": "low"}, {"rank": 7, "action": "Add quick-start mode for expert users — detect structured input on activation, offer to pre-populate draft and skip to a combined review pass instead of walking through all 9 stages.", "resolves": 2, "effort": "medium"}]}</script>
+<script>
+const RAW = JSON.parse(document.getElementById('report-data').textContent);
+const DATA = normalize(RAW);
+
+function normalize(d) {
+  // Fix meta field variants
+  if (d.meta) {
+    d.meta.skill_name = d.meta.skill_name || d.meta.skill || d.meta.name || 'Unknown';
+    d.meta.scanner_count = typeof d.meta.scanner_count === 'number' ? d.meta.scanner_count
+      : Array.isArray(d.meta.scanners_run) ? d.meta.scanners_run.length
+      : d.meta.scanner_count || 0;
+  }
+  // Fix strengths: plain strings → objects
+  d.strengths = (d.strengths || []).map(s =>
+    typeof s === 'string' ? { title: s, detail: '' } : { title: s.title || '', detail: s.detail || '' }
+  );
+  // Fix opportunities: title→name, findings_resolved→findings
+  (d.opportunities || []).forEach(o => {
+    o.name = o.name || o.title || '';
+    o.finding_count = o.finding_count || (o.findings || o.findings_resolved || []).length;
+    if (!o.findings && o.findings_resolved) o.findings = [];
+    o.action = o.action || o.fix || '';
+  });
+  // Fix broken: description→detail, fix→action
+  (d.broken || []).forEach(b => {
+    b.detail = b.detail || b.description || '';
+    b.action = b.action || b.fix || '';
+  });
+  // Fix recommendations: description→action
+  (d.recommendations || []).forEach((r, i) => {
+    r.action = r.action || r.description || '';
+    r.rank = r.rank || i + 1;
+  });
+  // Fix journeys: persona→archetype, friction→friction_points
+  if (d.detailed_analysis && d.detailed_analysis.experience) {
+    d.detailed_analysis.experience.journeys = (d.detailed_analysis.experience.journeys || []).map(j => ({
+      archetype: j.archetype || j.persona || j.name || 'Unknown',
+      summary: j.summary || j.journey_summary || j.description || j.friction || '',
+      friction_points: j.friction_points || (j.friction ? [j.friction] : []),
+      bright_spots: j.bright_spots || (j.bright ? [j.bright] : [])
+    }));
+  }
+  return d;
+}
+
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+function init() {
+  const m = DATA.meta;
+  document.getElementById('skill-name').textContent = m.skill_name;
+  document.getElementById('subtitle').innerHTML =
+    `${esc(m.skill_path)} &bull; ${m.timestamp ? m.timestamp.split('T')[0] : ''} &bull; ${m.scanner_count || 0} scanners &bull; <a href="quality-report.md">Full Report &nearr;</a>`;
+
+  document.getElementById('grade-area').innerHTML =
+    `<div class="grade grade-${DATA.grade}">${esc(DATA.grade)}</div>`;
+  document.getElementById('narrative').textContent = DATA.narrative || '';
+
+  renderBroken();
+  renderOpportunities();
+  renderStrengths();
+  renderRecommendations();
+  renderDetailed();
+}
+
+function renderBroken() {
+  const items = DATA.broken || [];
+  if (!items.length) return;
+  let html = `<div class="section"><div class="section-header open" onclick="toggleSection(this)">`;
+  html += `<span class="arrow">&#9654;</span><span class="label">Broken / Critical (${items.length})</span>`;
+  html += `<div class="actions"><button class="btn btn-primary" onclick="event.stopPropagation();showBrokenPrompt()">Fix These</button></div>`;
+  html += `</div><div class="section-body open">`;
+  items.forEach(item => {
+    const loc = item.file ? `${item.file}${item.line ? ':'+item.line : ''}` : '';
+    html += `<div class="item">`;
+    html += `<span class="badge badge-${item.severity || 'high'}">${esc(item.severity || 'high')}</span> `;
+    if (loc) html += `<span class="item-file">${esc(loc)}</span>`;
+    html += `<div class="item-title">${esc(item.title)}</div>`;
+    if (item.detail) html += `<div class="item-desc">${esc(item.detail)}</div>`;
+    if (item.action) html += `<div class="item-action"><strong>Fix:</strong> ${esc(item.action)}</div>`;
+    html += `</div>`;
+  });
+  html += `</div></div>`;
+  document.getElementById('broken-section').innerHTML = html;
+}
+
+function renderOpportunities() {
+  const opps = DATA.opportunities || [];
+  if (!opps.length) return;
+  let html = `<div class="section"><div class="section-header open" onclick="toggleSection(this)">`;
+  html += `<span class="arrow">&#9654;</span><span class="label">Opportunities (${opps.length})</span>`;
+  html += `</div><div class="section-body open">`;
+  opps.forEach((opp, idx) => {
+    html += `<div class="opp">`;
+    html += `<div class="opp-header">`;
+    html += `<span class="badge badge-${opp.severity || 'medium'}">${esc(opp.severity || 'medium')}</span>`;
+    html += `<span class="opp-name">${idx+1}. ${esc(opp.name)}</span>`;
+    html += `<span class="opp-count">${opp.finding_count || (opp.findings||[]).length} observations</span>`;
+    html += `<button class="btn" onclick="toggleFindings(${idx})">Details</button>`;
+    html += `<button class="btn btn-primary" onclick="showThemePrompt(${idx})">Fix This</button>`;
+    html += `</div>`;
+    html += `<div class="opp-desc">${esc(opp.description)}</div>`;
+    if (opp.impact) html += `<div class="opp-impact">Impact: ${esc(opp.impact)}</div>`;
+    html += `<div class="opp-findings" id="findings-${idx}">`;
+    (opp.findings || []).forEach(f => {
+      const loc = f.file ? `${f.file}${f.line ? ':'+f.line : ''}` : '';
+      html += `<div class="opp-finding">`;
+      html += `<strong>${esc(f.title)}</strong>`;
+      if (loc) html += ` <span class="item-file">${esc(loc)}</span>`;
+      if (f.source) html += ` <span class="source">[${esc(f.source)}]</span>`;
+      if (f.detail) html += `<br>${esc(f.detail)}`;
+      html += `</div>`;
+    });
+    html += `</div></div>`;
+  });
+  html += `</div></div>`;
+  document.getElementById('opportunities-section').innerHTML = html;
+}
+
+function renderStrengths() {
+  const items = DATA.strengths || [];
+  if (!items.length) return;
+  let html = `<div class="section"><div class="section-header" onclick="toggleSection(this)">`;
+  html += `<span class="arrow">&#9654;</span><span class="label">Strengths (${items.length})</span>`;
+  html += `</div><div class="section-body">`;
+  items.forEach(s => {
+    html += `<div class="strength-item"><div class="title">${esc(s.title)}</div>`;
+    if (s.detail) html += `<div class="detail">${esc(s.detail)}</div>`;
+    html += `</div>`;
+  });
+  html += `</div></div>`;
+  document.getElementById('strengths-section').innerHTML = html;
+}
+
+function renderRecommendations() {
+  const recs = DATA.recommendations || [];
+  if (!recs.length) return;
+  let html = `<div class="section"><div class="section-header open" onclick="toggleSection(this)">`;
+  html += `<span class="arrow">&#9654;</span><span class="label">Recommendations</span>`;
+  html += `</div><div class="section-body open"><div class="recs">`;
+  recs.forEach(r => {
+    html += `<div class="rec">`;
+    html += `<span class="rec-rank">#${r.rank}</span>`;
+    html += `${esc(r.action)}`;
+    if (r.resolves) html += ` <span class="rec-resolves">(resolves ${r.resolves} observations)</span>`;
+    html += `</div>`;
+  });
+  html += `</div></div></div>`;
+  document.getElementById('recommendations-section').innerHTML = html;
+}
+
+function renderDetailed() {
+  const da = DATA.detailed_analysis;
+  if (!da) return;
+  const dims = [
+    ['structure', 'Structure & Integrity'],
+    ['craft', 'Craft & Writing Quality'],
+    ['cohesion', 'Cohesion & Design'],
+    ['efficiency', 'Execution Efficiency'],
+    ['experience', 'User Experience'],
+    ['scripts', 'Script Opportunities']
+  ];
+  let html = `<div class="section"><div class="section-header" onclick="toggleSection(this)">`;
+  html += `<span class="arrow">&#9654;</span><span class="label">Detailed Analysis</span>`;
+  html += `</div><div class="section-body">`;
+  dims.forEach(([key, label]) => {
+    const dim = da[key];
+    if (!dim) return;
+    html += `<div class="analysis-section"><h4>${label}</h4>`;
+    if (dim.assessment) html += `<p>${esc(dim.assessment)}</p>`;
+    if (dim.dimensions) {
+      html += `<table style="width:100%;font-size:0.85rem;margin:0.5rem 0;border-collapse:collapse;">`;
+      html += `<tr><th style="text-align:left;padding:0.3rem;border-bottom:1px solid var(--border)">Dimension</th><th style="text-align:left;padding:0.3rem;border-bottom:1px solid var(--border)">Score</th><th style="text-align:left;padding:0.3rem;border-bottom:1px solid var(--border)">Notes</th></tr>`;
+      Object.entries(dim.dimensions).forEach(([d, v]) => {
+        if (v && typeof v === 'object') {
+          html += `<tr><td style="padding:0.3rem;border-bottom:1px solid var(--border)">${esc(d.replace(/_/g,' '))}</td><td style="padding:0.3rem;border-bottom:1px solid var(--border)">${esc(v.score||'')}</td><td style="padding:0.3rem;border-bottom:1px solid var(--border)">${esc(v.notes||'')}</td></tr>`;
+        }
+      });
+      html += `</table>`;
+    }
+    if (dim.journeys && dim.journeys.length) {
+      dim.journeys.forEach(j => {
+        html += `<div style="margin:0.5rem 0"><strong>${esc(j.archetype)}</strong>: ${esc(j.summary || j.journey_summary || '')}`;
+        if (j.friction_points && j.friction_points.length) {
+          html += `<ul style="color:var(--high);font-size:0.85rem;padding-left:1.25rem">`;
+          j.friction_points.forEach(fp => { html += `<li>${esc(fp)}</li>`; });
+          html += `</ul>`;
+        }
+        html += `</div>`;
+      });
+    }
+    if (dim.autonomous) {
+      const a = dim.autonomous;
+      html += `<p><strong>Headless Potential:</strong> ${esc(a.potential||'')}`;
+      if (a.notes) html += ` — ${esc(a.notes)}`;
+      html += `</p>`;
+    }
+    (dim.findings || []).forEach(f => {
+      const loc = f.file ? `${f.file}${f.line ? ':'+f.line : ''}` : '';
+      html += `<div class="analysis-finding">`;
+      if (f.severity) html += `<span class="badge badge-${f.severity}">${esc(f.severity)}</span> `;
+      html += `${esc(f.title)}`;
+      if (loc) html += ` <span class="item-file">${esc(loc)}</span>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+  html += `</div></div>`;
+  document.getElementById('detailed-section').innerHTML = html;
+}
+
+// --- Interactions ---
+function toggleSection(el) {
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
+}
+
+function toggleFindings(idx) {
+  document.getElementById('findings-'+idx).classList.toggle('open');
+}
+
+// --- Prompt Generation ---
+function showThemePrompt(idx) {
+  const opp = DATA.opportunities[idx];
+  if (!opp) return;
+  let prompt = `## Task: ${opp.name}\nSkill path: ${DATA.meta.skill_path}\n\n`;
+  prompt += `### Problem\n${opp.description}\n\n`;
+  prompt += `### Fix\n${opp.action}\n\n`;
+  if (opp.findings && opp.findings.length) {
+    prompt += `### Specific observations to address:\n\n`;
+    opp.findings.forEach((f, i) => {
+      const loc = f.file ? (f.line ? `${f.file}:${f.line}` : f.file) : '';
+      prompt += `${i+1}. **${f.title}**`;
+      if (loc) prompt += ` (${loc})`;
+      if (f.detail) prompt += `\n   ${f.detail}`;
+      prompt += `\n`;
+    });
+  }
+  document.getElementById('modal-title').textContent = `Fix: ${opp.name}`;
+  document.getElementById('modal-content').textContent = prompt.trim();
+  document.getElementById('modal').classList.add('visible');
+}
+
+function showBrokenPrompt() {
+  const items = DATA.broken || [];
+  let prompt = `## Task: Fix Critical Issues\nSkill path: ${DATA.meta.skill_path}\n\n`;
+  items.forEach((item, i) => {
+    const loc = item.file ? (item.line ? `${item.file}:${item.line}` : item.file) : '';
+    prompt += `${i+1}. **[${(item.severity||'high').toUpperCase()}] ${item.title}**\n`;
+    if (loc) prompt += `   File: ${loc}\n`;
+    if (item.detail) prompt += `   Context: ${item.detail}\n`;
+    if (item.action) prompt += `   Fix: ${item.action}\n`;
+    prompt += `\n`;
+  });
+  document.getElementById('modal-title').textContent = 'Fix Critical Issues';
+  document.getElementById('modal-content').textContent = prompt.trim();
+  document.getElementById('modal').classList.add('visible');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('visible'); }
+
+function copyModal() {
+  const text = document.getElementById('modal-content').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.modal .btn-primary');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy to Clipboard'; }, 1500);
+  });
+}
+
+init();
+</script>
+</body>
+</html>

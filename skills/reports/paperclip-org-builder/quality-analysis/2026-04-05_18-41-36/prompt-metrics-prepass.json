@@ -1,0 +1,84 @@
+{
+  "scanner": "prompt-craft-prepass",
+  "script": "prepass-prompt-metrics.py",
+  "version": "1.0.0",
+  "skill_path": "E:\\pawbytes\\agents\\paperclip-orgs-builder\\skills\\paperclip-org-builder",
+  "timestamp": "2026-04-05T11:41:54.439016+00:00",
+  "status": "info",
+  "skill_md_summary": {
+    "line_count": 61,
+    "token_estimate": 851,
+    "overview_lines": 5,
+    "table_count": 1,
+    "table_lines": 11,
+    "fenced_block_count": 0,
+    "fenced_block_lines": 0,
+    "section_count": 7
+  },
+  "prompt_health": {
+    "total_prompts": 0,
+    "prompts_with_config_header": 0,
+    "prompts_with_progression": 0
+  },
+  "aggregate": {
+    "total_files_scanned": 1,
+    "total_token_estimate": 851,
+    "total_waste_patterns": 0,
+    "total_back_references": 0
+  },
+  "resource_sizes": {},
+  "files": [
+    {
+      "file": "SKILL.md",
+      "line_count": 61,
+      "token_estimate": 851,
+      "sections": [
+        {
+          "level": 2,
+          "title": "Overview",
+          "line": 8
+        },
+        {
+          "level": 2,
+          "title": "On Activation",
+          "line": 14
+        },
+        {
+          "level": 2,
+          "title": "Design Principles",
+          "line": 24
+        },
+        {
+          "level": 2,
+          "title": "Stages",
+          "line": 31
+        },
+        {
+          "level": 2,
+          "title": "Compaction Recovery",
+          "line": 47
+        },
+        {
+          "level": 2,
+          "title": "Domain Reference",
+          "line": 51
+        },
+        {
+          "level": 2,
+          "title": "Scripts",
+          "line": 55
+        }
+      ],
+      "table_count": 1,
+      "table_lines": 11,
+      "fenced_block_count": 0,
+      "fenced_block_lines": 0,
+      "waste_patterns": [],
+      "back_references": [],
+      "has_config_header": false,
+      "has_progression": false,
+      "overview_lines": 5,
+      "is_skill_md": true
+    }
+  ]
+}
